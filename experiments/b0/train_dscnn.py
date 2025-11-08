@@ -114,12 +114,13 @@ def lr_schedule(epoch):
 
 lr_callback = callbacks.LearningRateScheduler(lr_schedule)
 ckpt_callback = callbacks.ModelCheckpoint(
-    "best_ds_cnn.h5",
+    "best_ds_cnn.weights.h5",  
     monitor="val_accuracy",
     save_best_only=True,
     save_weights_only=True,
     verbose=1,
 )
+
 
 batch_size = 100
 steps_per_epoch = max(1, X_train.shape[0] // batch_size)
