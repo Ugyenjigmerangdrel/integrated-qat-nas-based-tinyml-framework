@@ -44,8 +44,8 @@ import random
 # =========================================================
 # CONFIG: adjust these paths for your project
 # =========================================================
-DATA_ROOT = "../../data/raw/speech_commands_v0.01"  # <-- change if needed
-OUTPUT_DIR = "../../data/processed_40"              # <-- change if needed
+DATA_ROOT = "../../data/raw/"  # <-- change if needed
+OUTPUT_DIR = "../../data/processed"              # <-- change if needed
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 OUTPUT_PATH = os.path.join(OUTPUT_DIR, "gsc_mfcc40_ds_cnn.npz")
