@@ -83,6 +83,15 @@ def build_ds_cnn(input_shape, num_classes):
 model = build_ds_cnn(input_shape, num_classes)
 model.summary()
 
+
+initial_lr = 5e-4
+opt = optimizers.Adam(learning_rate=initial_lr)
+
+model.compile(
+    optimizer=opt,
+    loss="sparse_categorical_crossentropy",
+    metrics=["accuracy"],
+)
 # =========================================================
 # Evaluation on test set
 # =========================================================
