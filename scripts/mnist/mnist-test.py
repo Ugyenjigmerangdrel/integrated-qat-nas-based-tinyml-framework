@@ -1,5 +1,5 @@
 import tensorflow as tf
-print("TENSORFLOW_VERSION": tf.__version__)
+print("TENSORFLOW_VERSION", tf.__version__)
 
 from tensorflow.keras.layers import Dense, Flatten, Conv2D
 from tensorflow.keras import Model
