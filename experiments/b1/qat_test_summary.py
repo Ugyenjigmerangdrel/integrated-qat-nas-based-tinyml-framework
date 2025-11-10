@@ -72,7 +72,7 @@ model.compile(optimizer=opt,
               loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
-model.load_weights("best_ds_cnn.weights.h5")
+
 
 quantize_model = tfmot.quantization.keras.quantize_model
 
@@ -83,7 +83,7 @@ q_aware_model = quantize_model(model)
 q_aware_model.compile(optimizer=opt,
               loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
-
+q_aware_model.load_weights("best_ds_cnn.weights.h5")
 
 test_loss, test_acc = q_aware_model.evaluate(X_test, y_test, verbose=0)
 print(f"Test accuracy: {test_acc * 100:.2f}%")
