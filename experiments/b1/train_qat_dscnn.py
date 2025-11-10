@@ -4,7 +4,7 @@ import tensorflow as tf
 
 
 from tensorflow_model_optimization.python.core.keras.compat import keras
-
+import tensorflow_model_optimization as tfmot
 
 DATA_PATH = "../../data/processed/gsc_mfcc40_ds_cnn.npz"
 
@@ -65,5 +65,24 @@ def build_dscnn_qat(input_shape, num_classes):
 
 model = build_dscnn_qat(input_shape, num_classes)
 model.summary()
+
+initial_lr = 5e-4
+opt = keras.optimizers.Adam(learning_rate=initial_lr)
+model.compile(optimizer=opt,
+              loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+
+
+quantize_model = tfmot.quantization.keras.quantize_model
+
+# q_aware stands for for quantization aware.
+q_aware_model = quantize_model(model)
+
+# `quantize_model` requires a recompile.
+q_aware_model.compile(optimizer='adam',
+              loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+              metrics=['accuracy'])
+
+q_aware_model.summary()
 
 # Model Quantisation
