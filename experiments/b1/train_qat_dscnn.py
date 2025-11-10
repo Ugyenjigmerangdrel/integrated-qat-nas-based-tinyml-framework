@@ -57,7 +57,7 @@ def build_dscnn_qat(input_shape, num_classes):
 
     x = layers.GlobalAveragePooling2D()(x)
     output = layers.Dense(num_classes, activation="softmax")(x)
-    model = models.Model(inputs=input, outputs=output, name="dscnn_qat_model")
+    model = models.Model(inputs=inputs, outputs=output, name="dscnn_qat_model")
     return model
 
 
