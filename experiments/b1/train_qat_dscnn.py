@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import layers, models, optimizer, callbacks
+from tensorflow.keras import layers, models, optimizers, callbacks
 
 
 DATA_PATH = "../../data/processed/gsc_mfcc40_ds_cnn.npz"
