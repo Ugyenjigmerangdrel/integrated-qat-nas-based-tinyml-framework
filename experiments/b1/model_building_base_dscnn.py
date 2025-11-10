@@ -1,9 +1,7 @@
 import math
 import numpy as np
 import tensorflow as tf
-
-
-from tensorflow_model_optimization.python.core.keras.compat import keras
+from tensorflow.keras import layers, models, optimizers, callbacks
 
 
 DATA_PATH = "../../data/processed/gsc_mfcc40_ds_cnn.npz"
@@ -34,21 +32,21 @@ print("Shape of Input", input_shape)
 #Model Building Function
 
 def build_dscnn_qat(input_shape, num_classes):
-    inputs = keras.layers.Input(shape=input_shape)
+    inputs = layers.Input(shape=input_shape)
 
-    x = keras.layers.Conv2D(filters=64, kernel_size=(10, 4), strides=(2,2), padding="same", use_bias=False)(inputs)
+    x = layers.Conv2D(filters=64, kernel_size=(10, 4), strides=(2,2), padding="same", use_bias=False)(inputs)
 
-    x = keras.layers.BatchNormalization()(x)
-    x = keras.layers.ReLU()(x)
+    x = layers.BatchNormalization()(x)
+    x = layers.ReLU()(x)
 
     def dscnn_layer(x, deptwise_kernel=(3,3), pointwise_filters=64):
-        x = keras.layers.DepthwiseConv2D(deptwise_kernel, padding="same", use_bias=False)(x)
-        x = keras.layers.BatchNormalization()(x)
-        x = keras.layers.ReLU()(x)
+        x = layers.DepthwiseConv2D(deptwise_kernel, padding="same", use_bias=False)(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.ReLU()(x)
 
-        x = keras.layers.Conv2D(pointwise_filters, kernel_size=(1,1), padding="same", use_bias=False)(x)
-        x = keras.layers.BatchNormalization()(x)
-        x = keras.layers.ReLU()(x)
+        x = layers.Conv2D(pointwise_filters, kernel_size=(1,1), padding="same", use_bias=False)(x)
+        x = layers.BatchNormalization()(x)
+        x = layers.ReLU()(x)
 
         return x
     
@@ -57,13 +55,11 @@ def build_dscnn_qat(input_shape, num_classes):
     x = dscnn_layer(x)
     x = dscnn_layer(x)
 
-    x = keras.layers.GlobalAveragePooling2D()(x)
-    output = keras.layers.Dense(num_classes, activation="softmax")(x)
-    model = keras.models.Model(inputs=inputs, outputs=output, name="dscnn_qat_model")
+    x = layers.GlobalAveragePooling2D()(x)
+    output = layers.Dense(num_classes, activation="softmax")(x)
+    model = models.Model(inputs=inputs, outputs=output, name="dscnn_qat_model")
     return model
 
 
 model = build_dscnn_qat(input_shape, num_classes)
 model.summary()
-
-# Model Quantisation
