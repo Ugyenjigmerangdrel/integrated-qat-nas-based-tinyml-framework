@@ -16,9 +16,9 @@ X_test = data["X_test"]
 y_test = data["y_test"]
 label_to_index = data["label_to_index"].item()
 
-X_train = X_train[..., np.newaxis()]
-X_val = X_val[..., np.newaxis()]
-X_test = X_test[..., np.newaxis()]
+X_train = X_train[..., np.newaxis]
+X_val = X_val[..., np.newaxis]
+X_test = X_test[..., np.newaxis]
 
 num_classes = len(label_to_index)
 input_shape = X_train.shape[1:]
