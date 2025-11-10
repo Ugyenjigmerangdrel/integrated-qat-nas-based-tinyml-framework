@@ -79,10 +79,53 @@ quantize_model = tfmot.quantization.keras.quantize_model
 q_aware_model = quantize_model(model)
 
 # `quantize_model` requires a recompile.
-q_aware_model.compile(optimizer='adam',
+q_aware_model.compile(optimizer=opt,
               loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
               metrics=['accuracy'])
 
 q_aware_model.summary()
 
 # Model Quantisation
+
+def lr_schedule(epoch):
+    # approximate: if epoch corresponds to >= 10K iterations, drop LR
+    # Steps per epoch = N_train / batch_size
+    # 10K iterations = 10000 * batch_size samples
+    # epoch_switch = (10000 * batch_size) / N_train
+    batch_size = 100
+    steps_per_epoch = max(1, X_train.shape[0] // batch_size)
+    epoch_switch = math.floor(10000 / steps_per_epoch)
+
+    if epoch >= epoch_switch:
+        return 1e-4
+    else:
+        return 5e-4
+
+
+lr_callback = keras.callbacks.LearningRateScheduler(lr_schedule)
+ckpt_callback = keras.callbacks.ModelCheckpoint(
+    "best_ds_cnn.weights.h5",  
+    monitor="val_accuracy",
+    save_best_only=True,
+    save_weights_only=True,
+    verbose=1,
+)
+
+
+batch_size = 100
+steps_per_epoch = max(1, X_train.shape[0] // batch_size)
+total_iterations = 20000
+epochs = math.ceil(total_iterations / steps_per_epoch)
+
+print(f"Steps per epoch: {steps_per_epoch}")
+print(f"Planned epochs (approx 20K iterations): {epochs}")
+
+history = q_aware_model.fit(
+    X_train,
+    y_train,
+    batch_size=batch_size,
+    epochs=epochs,
+    validation_data=(X_val, y_val),
+    callbacks=[lr_callback, ckpt_callback],
+    verbose=1,
+)
