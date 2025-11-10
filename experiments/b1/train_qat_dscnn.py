@@ -44,7 +44,7 @@ def build_dscnn_qat(input_shape, num_classes):
         x = layers.BatchNormalization()(x)
         x = layers.ReLU()(x)
 
-        x = layers.Conv2D(pointwise_filters, kernel_size=(1,1), padding="same", use_bias=False)
+        x = layers.Conv2D(pointwise_filters, kernel_size=(1,1), padding="same", use_bias=False)(x)
         x = layers.BatchNormalization()(x)
         x = layers.ReLU()(x)
 
