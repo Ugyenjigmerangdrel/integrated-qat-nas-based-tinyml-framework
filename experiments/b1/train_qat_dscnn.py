@@ -34,7 +34,7 @@ print("Shape of Input", input_shape)
 def build_dscnn_qat(input_shape, num_classes):
     input = layers.Input(shape=input_shape)
 
-    x = layers.Conv2D(filters=64, kernel_size=(10, 4), stride=(2,2), padding="same", use_bias=False)(input)
+    x = layers.Conv2D(filters=64, kernel_size=(10, 4), strides=(2,2), padding="same", use_bias=False)(input)
 
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
