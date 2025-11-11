@@ -23,6 +23,12 @@ else:
 from tensorflow.keras import layers, models, optimizers, callbacks
 import tensorflow_model_optimization as tfmot
 
+SEED = 42  
+os.environ['PYTHONHASHSEED'] = str(SEED)
+random.seed(SEED)
+np.random.seed(SEED)
+tf.random.set_seed(SEED)
+
 DATA_PATH = "../../data/processed/gsc_mfcc40_ds_cnn.npz"
 
 data = np.load(DATA_PATH, allow_pickle=True)
@@ -69,7 +75,7 @@ def pooling_layer(x, selected_pooling):
 def build_model(input_shape, num_classes, cfg):
     inputs = layers.Input(shape=input_shape)
 
-    x = layers.Conv2D(filters=cfg["first_conv_filters"], kernel_size=cfg["first_conv_filters"], strides=cfg["first_conv_stride"], padding="same", use_bias=False)(inputs)
+    x = layers.Conv2D(filters=cfg["first_conv_filters"], kernel_size=cfg["first_conv_kernel"], strides=cfg["first_conv_stride"], padding="same", use_bias=False)(inputs)
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
 
@@ -132,7 +138,7 @@ search_space = {
     "dropout_rate": [0.0, 0.2, 0.3],
 }
 
-model_configs = generate_unique_configs(search_space, 20)
+model_configs = generate_unique_configs(search_space, 10)
 
 '''
 How the search needs to work?
@@ -220,6 +226,8 @@ for cfg in model_configs:
     print(f"Test accuracy: {test_acc * 100:.2f}%")
 
     summary_results[count] = [test_loss, test_acc, avg_latency, model_size, train_time, cfg]
+    print("Test Loss |  Test Acc | Avg latency | Model Size | Train Time | CFG")
+    print(summary_results)
 
     tf.keras.backend.clear_session()
     gc.collect()
