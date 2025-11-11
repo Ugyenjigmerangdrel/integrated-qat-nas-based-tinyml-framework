@@ -79,6 +79,7 @@ def generate_model_config(search_space):
     cfg["first_conv_kernel"] = random.choice(search_space["first_conv_kernel"])
     cfg["first_conv_stride"] = random.choice(search_space["first_conv_stride"])
     cfg["depthwise_kernel"] = random.choice(search_space["depthwise_kernel"])
+    cfg["pointwise_filters"] = random.choice(search_space["pointwise_filters"])
     cfg["pooling_function"] = random.choice(search_space["pooling_function"])
     cfg["dropout_rate"] = random.choice(search_space["dropout_rate"])
 
