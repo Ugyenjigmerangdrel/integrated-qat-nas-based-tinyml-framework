@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import tensorflow as tf
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
 
 DATA_PATH = "../../data/processed/gsc_mfcc40_ds_cnn.npz"  
@@ -25,7 +26,7 @@ print("Input shape:", input_shape)
 print("Num classes:", num_classes)
 print("Train size:", X_train.shape[0])
 
-model = tf.keras.models.load_model("b2rs-best-dscnn-model.keras")
+model = keras.models.load_model("b2rs-best-dscnn-model.keras")
 
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
 
