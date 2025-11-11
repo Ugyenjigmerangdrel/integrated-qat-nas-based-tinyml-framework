@@ -4,7 +4,7 @@ import numpy as np
 import tensorflow as tf
 # from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow.keras import layers, models, optimizers, callbacks
-import tensorflow_model_optimization as keras
+import tensorflow_model_optimization as tfmot
 
 DATA_PATH = "../../data/processed/gsc_mfcc40_ds_cnn.npz"
 
@@ -41,22 +41,45 @@ def build_dscnn_layer(x, depthwise_kernel=(3,3), pointwise_filters=64):
 
     return x
 
-def build_model(input_shape, num_classes, num_dscnn_layers):
+def pooling_layer(x, selected_pooling):
+    if selected_pooling=="gap":
+        x = layers.GlobalAveragePooling2D()(x)
+    elif selected_pooling=="max":
+        x = layers.GlobalMaxPooling2D()(x)
+
+    return x
+
+def build_model(input_shape, num_classes, cfg):
     inputs = layers.Input(shape=input_shape)
 
-    x = layers.Conv2D(filters=64, kernel_size=(10, 4), strides=(2, 2), padding="same", use_bias=False)(inputs)
+    x = layers.Conv2D(filters=cfg["first_conv_filters"], kernel_size=cfg["first_conv_filters"], strides=cfg["first_conv_stride"], padding="same", use_bias=False)(inputs)
     x = layers.BatchNormalization()(x)
     x = layers.ReLU()(x)
 
-    for _ in range(num_dscnn_layers):
-        x = build_dscnn_layer(x, depthwise_kernel=(3,3), pointwise_filters=(64))
+    for _ in range(cfg["num_dscnn_layers"]):
+        x = build_dscnn_layer(x, depthwise_kernel=cfg["depthwise_kernel"], pointwise_filters=cfg["pointwise_filters"])
 
-    x = layers.GlobalAveragePooling2D()(x)
+    if cfg["dropout_rate"] > 0:
+        x = layers.Dropout(cfg["dropout_rate"])(x)
+
+    x = pooling_layer(x, cfg["pooling_function"])
     outputs = layers.Dense(num_classes, activation="softmax")(x)
 
     model = models.Model(inputs=inputs, outputs=outputs, name="Keyword Spotting Model") 
 
     return model
+
+def generate_model_config(search_space):
+    cfg = {}
+    cfg["num_dscnn_layers"] = np.random.choice(search_space["num_dscnn_layers"])
+    cfg["first_conv_filters"] = np.random.choice(search_space["first_conv_filters"])
+    cfg["first_conv_kernel"] = np.random.choice(search_space["first_conv_kernel"])
+    cfg["first_conv_stride"] = np.random.choice(search_space["first_conv_stride"])
+    cfg["depthwise_kernel"] = np.random.choice(search_space["depthwise_kernel"])
+    cfg["pooling_function"] = np.random.choice(search_space["pooling_function"])
+    cfg["dropout_rate"] = np.random.choice(search_space["dropout_rate"])
+
+    return cfg
 
 print("=================Model 1 With 4 DSCNN layers================")
 model1 = build_model(input_shape, num_classes, 4)
@@ -81,6 +104,12 @@ search_space = {
 }
 
 
+for i in range(5):
+    print(f"Model Config {i+1} \n")
+    config = generate_model_config(search_space)
+
+    print(config)
+    print("---"*30)
 
 
 
