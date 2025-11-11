@@ -68,7 +68,7 @@ def build_model(input_shape, num_classes, cfg):
     x = pooling_layer(x, cfg["pooling_function"])
     outputs = layers.Dense(num_classes, activation="softmax")(x)
 
-    model = models.Model(inputs=inputs, outputs=outputs, name="Keyword Spotting Model") 
+    model = models.Model(inputs=inputs, outputs=outputs, name="keyword-spotting-model") 
 
     return model
 
