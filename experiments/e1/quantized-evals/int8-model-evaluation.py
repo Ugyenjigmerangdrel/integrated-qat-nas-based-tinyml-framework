@@ -28,7 +28,7 @@ random.seed(SEED)
 np.random.seed(SEED)
 tf.random.set_seed(SEED)
 
-DATA_PATH = "../../data/processed/gsc_mfcc40_ds_cnn.npz"
+DATA_PATH = "../../../data/processed/gsc_mfcc40_ds_cnn.npz"
 
 data = np.load(DATA_PATH, allow_pickle=True)
 
