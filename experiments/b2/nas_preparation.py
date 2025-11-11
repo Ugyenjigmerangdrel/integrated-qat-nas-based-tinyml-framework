@@ -2,6 +2,7 @@ import math
 import numpy as np
 import random
 import json
+import gc
 
 import tensorflow as tf
 # from tensorflow_model_optimization.python.core.keras.compat import keras
@@ -84,6 +85,7 @@ def generate_model_config(search_space):
     return cfg
 
 
+# Search Strategy 1: Random Search 
 def generate_unique_configs(search_space, n):
     seen = set()
     configs = []
@@ -98,6 +100,7 @@ def generate_unique_configs(search_space, n):
             configs.append(cfg)
         print(cfg)
         print("---"*30)
+    return configs
 
 search_space = {
     "num_dscnn_layers": [2, 3, 4, 5, 6],
@@ -114,7 +117,86 @@ search_space = {
     "dropout_rate": [0.0, 0.2, 0.3],
 }
 
-generate_unique_configs(search_space, 20)
+model_configs = generate_unique_configs(search_space, 20)
+
+'''
+How the search needs to work?
+- single objective nas approach
+- for each of the model configs generated through random config generator from search space
+    - build the model
+    - model summary
+    - compile model
+    - train model 10 epochs
+    - evaluate model on accuracy
+    - save the best model
+    - check the inference latency
+    - check the size of the model
+    - build a summary results for comparison
+    - clear the tensorflow backend
+    - repeat
+'''
+
+count = 1
+summary_results = {}
+
+for cfg in model_configs:
+
+    model = build_model(input_shape, num_classes, cfg)
+    model.summary()
+
+    initial_lr = 5e-4
+    opt = optimizers.Adam(learning_rate=initial_lr)
+
+    model.compile(
+        optimizer=opt,
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"]
+    )
+
+    batch_size = 100
+    steps_per_epoch = max(1, X_train.shape[0] // batch_size)
+    total_iterations = 20000
+    epochs = 10
+
+    ckpt_callback = callbacks.ModelCheckpoint(
+        "nas_dscnn.weights.h5",  
+        monitor="val_accuracy",
+        save_best_only=True,
+        save_weights_only=True,
+        verbose=1,
+    )
+
+    history = model.fit(
+        X_train,
+        y_train,
+        batch_size=batch_size,
+        epochs=epochs,
+        callbacks=[ckpt_callback],
+        validation_data=(X_val, y_val),
+        verbose=1,
+    )
+
+    model.load_weights("nas_dscnn.weights.h5")
+    test_loss, test_acc = model.evaluate(X_test, y_test, verbose=0)
+    print(f"Test accuracy: {test_acc * 100:.2f}%")
+
+    summary_results[count] = [test_loss, test_acc]
+
+    tf.keras.backend.clear_session()
+    gc.collect()
+
+    count+= 1
+
+    
+
+
+
+
+
+
+    
+
+
 
 
 
