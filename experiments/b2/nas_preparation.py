@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import random
 
 import tensorflow as tf
 # from tensorflow_model_optimization.python.core.keras.compat import keras
@@ -71,13 +72,13 @@ def build_model(input_shape, num_classes, cfg):
 
 def generate_model_config(search_space):
     cfg = {}
-    cfg["num_dscnn_layers"] = np.random.choice(search_space["num_dscnn_layers"])
-    cfg["first_conv_filters"] = np.random.choice(search_space["first_conv_filters"])
-    cfg["first_conv_kernel"] = np.random.choice(search_space["first_conv_kernel"])
-    cfg["first_conv_stride"] = np.random.choice(search_space["first_conv_stride"])
-    cfg["depthwise_kernel"] = np.random.choice(search_space["depthwise_kernel"])
-    cfg["pooling_function"] = np.random.choice(search_space["pooling_function"])
-    cfg["dropout_rate"] = np.random.choice(search_space["dropout_rate"])
+    cfg["num_dscnn_layers"] = random.choice(search_space["num_dscnn_layers"])
+    cfg["first_conv_filters"] = random.choice(search_space["first_conv_filters"])
+    cfg["first_conv_kernel"] = random.choice(search_space["first_conv_kernel"])
+    cfg["first_conv_stride"] = random.choice(search_space["first_conv_stride"])
+    cfg["depthwise_kernel"] = random.choice(search_space["depthwise_kernel"])
+    cfg["pooling_function"] = random.choice(search_space["pooling_function"])
+    cfg["dropout_rate"] = random.choice(search_space["dropout_rate"])
 
     return cfg
 
