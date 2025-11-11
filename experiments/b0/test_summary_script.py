@@ -6,7 +6,7 @@ from tensorflow.keras import layers, models, optimizers, callbacks
 # =========================================================
 # Load preprocessed data
 # =========================================================
-DATA_PATH = "../../data/processed/gsc_mfcc40_ds_cnn.npz"  # <-- match preprocessing
+DATA_PATH = "../../data/processed/gsc_mfcc40_ds_cnn.npz"  
 data = np.load(DATA_PATH, allow_pickle=True)
 
 X_train = data["X_train"]   # (N_train, 49, 40)

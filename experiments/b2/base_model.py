@@ -6,7 +6,7 @@ import tensorflow as tf
 from tensorflow.keras import layers, models, optimizers, callbacks
 import tensorflow_model_optimization as keras
 
-DATA_PATH=""
+DATA_PATH = "../../data/processed/gsc_mfcc40_ds_cnn.npz"
 
 data = np.load(DATA_PATH, allow_pickle=True)
 
