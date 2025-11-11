@@ -114,7 +114,7 @@ search_space = {
     "dropout_rate": [0.0, 0.2, 0.3],
 }
 
-
+generate_unique_configs(search_space, 20)
 
 
 
