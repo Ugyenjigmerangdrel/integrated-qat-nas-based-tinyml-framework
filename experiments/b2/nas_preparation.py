@@ -81,13 +81,6 @@ def generate_model_config(search_space):
 
     return cfg
 
-print("=================Model 1 With 4 DSCNN layers================")
-model1 = build_model(input_shape, num_classes, 4)
-model1.summary()
-print("=================Model 2 with 6 DSCNN Layers================")
-model2 = build_model(input_shape, num_classes, 6)
-model2.summary()
-
 search_space = {
     "num_dscnn_layers": [2, 3, 4, 5, 6],
 
