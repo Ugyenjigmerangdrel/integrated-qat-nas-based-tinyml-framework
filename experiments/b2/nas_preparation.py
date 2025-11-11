@@ -89,7 +89,7 @@ def generate_unique_configs(search_space, n):
     configs = []
 
     while len(configs) < n:
-        print(f"Model Config {len(config)} \n")
+        print(f"Model Config {len(configs)} \n")
         cfg = generate_model_config(search_space)
         # serialize dict (sorted keys ensure deterministic string)
         key = json.dumps(cfg, sort_keys=True)
