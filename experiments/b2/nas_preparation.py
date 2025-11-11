@@ -7,6 +7,18 @@ import time
 import os
 
 import tensorflow as tf
+
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+        print(f"Enabled memory growth for {len(gpus)} GPU(s).")
+    except RuntimeError as e:
+        print(e)
+else:
+    print("⚠️ No GPU detected.")
+    
 # from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow.keras import layers, models, optimizers, callbacks
 import tensorflow_model_optimization as tfmot
