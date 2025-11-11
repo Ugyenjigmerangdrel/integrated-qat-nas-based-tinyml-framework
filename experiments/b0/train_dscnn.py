@@ -1,11 +1,3 @@
-#!/usr/bin/env python
-"""
-train_ds_cnn.py
-
-Train a Depthwise-Separable CNN for Keyword Spotting
-on the preprocessed Google Speech Commands dataset.
-"""
-
 import math
 import numpy as np
 import tensorflow as tf
