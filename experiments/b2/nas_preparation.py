@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import random
+import json
 
 import tensorflow as tf
 # from tensorflow_model_optimization.python.core.keras.compat import keras
@@ -82,6 +83,22 @@ def generate_model_config(search_space):
 
     return cfg
 
+
+def generate_unique_configs(search_space, n):
+    seen = set()
+    configs = []
+
+    while len(configs) < n:
+        print(f"Model Config {len(config)} \n")
+        cfg = generate_model_config(search_space)
+        # serialize dict (sorted keys ensure deterministic string)
+        key = json.dumps(cfg, sort_keys=True)
+        if key not in seen:
+            seen.add(key)
+            configs.append(cfg)
+        print(cfg)
+        print("---"*30)
+
 search_space = {
     "num_dscnn_layers": [2, 3, 4, 5, 6],
 
@@ -98,12 +115,6 @@ search_space = {
 }
 
 
-for i in range(5):
-    print(f"Model Config {i+1} \n")
-    config = generate_model_config(search_space)
-
-    print(config)
-    print("---"*30)
 
 
 
