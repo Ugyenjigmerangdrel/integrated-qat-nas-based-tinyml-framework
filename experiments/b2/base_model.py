@@ -16,7 +16,7 @@ X_val = data["X_val"]
 y_val = data["y_val"]
 X_test = data["X_test"]
 y_test = data["y_test"]
-label_to_index = data["label_to_index"].items()
+label_to_index = data["label_to_index"].item()
 
 X_train = X_train[..., np.newaxis]
 X_val = X_val[..., np.newaxis]
@@ -52,7 +52,7 @@ def build_model(input_shape, num_classes, num_dscnn_layers):
         x = build_dscnn_layer(x, depthwise_kernel=(3,3), pointwise_filters=(64))
 
     x = layers.GlobalAveragePooling2D()(x)
-    outputs = layers.dense(num_classes, activation="softmax")(x)
+    outputs = layers.Dense(num_classes, activation="softmax")(x)
 
     model = models.Model(inputs=inputs, outputs=outputs, name="Keyword Spotting Model") 
 
