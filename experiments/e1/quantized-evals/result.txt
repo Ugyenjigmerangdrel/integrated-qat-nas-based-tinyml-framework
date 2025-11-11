@@ -1,0 +1,15 @@
+Length of Training Data 56196
+Number of Clases 12
+Shape of Input (49, 40, 1)
+/home/homelab/miniforge3/envs/tf-env/lib/python3.10/site-packages/tensorflow/lite/python/interpreter.py:457: UserWarning:     Warning: tf.lite.Interpreter is deprecated and is scheduled for deletion in
+    TF 2.20. Please use the LiteRT interpreter from the ai_edge_litert package.
+    See the [migration guide](https://ai.google.dev/edge/litert/migration)
+    for details.
+
+  warnings.warn(_INTERPRETER_DELETION_WARNING)
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+Input quantization: 0.05478545278310776 108
+Output quantization: 0.00390625 0
+TFLite INT8 Model Accuracy: 95.18%
+
+Before PTQ Test accuracy: 95.32%
