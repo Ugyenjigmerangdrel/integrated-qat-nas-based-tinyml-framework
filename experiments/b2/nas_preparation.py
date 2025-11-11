@@ -3,6 +3,8 @@ import numpy as np
 import random
 import json
 import gc
+import time
+import os
 
 import tensorflow as tf
 # from tensorflow_model_optimization.python.core.keras.compat import keras
@@ -141,9 +143,8 @@ count = 1
 summary_results = {}
 
 for cfg in model_configs:
-
+    print(cfg)
     model = build_model(input_shape, num_classes, cfg)
-    model.summary()
 
     initial_lr = 5e-4
     opt = optimizers.Adam(learning_rate=initial_lr)
@@ -167,6 +168,8 @@ for cfg in model_configs:
         verbose=1,
     )
 
+    start_train = time.time()
+
     history = model.fit(
         X_train,
         y_train,
@@ -177,18 +180,47 @@ for cfg in model_configs:
         verbose=1,
     )
 
+    train_time = time.time() - start_train
+
     model.load_weights("nas_dscnn.weights.h5")
+
+    # measure inference latency
+    sample_input = X_test[:1]
+    _ = model.predict(sample_input, verbose=0)
+
+    runs = 50
+    start_infer = time.time()
+    for _ in range(runs):
+        _ = model.predict(sample_input, verbose=0)
+    end_infer = time.time()
+
+    avg_latency = (end_infer - start_infer) / runs
+    print(f"Average inference latency: {avg_latency*1000:.3f} ms per sample")
+
+    # measure model size
+    model.save("temp_model.h5", include_optimizer=False)
+    model_size = os.path.getsize("temp_model.h5") / 1024  # KB
+    print(f"Model size: {model_size:.2f} KB")
+
     test_loss, test_acc = model.evaluate(X_test, y_test, verbose=0)
     print(f"Test accuracy: {test_acc * 100:.2f}%")
 
-    summary_results[count] = [test_loss, test_acc]
+    summary_results[count] = [test_loss, test_acc, avg_latency, model_size]
 
     tf.keras.backend.clear_session()
     gc.collect()
+    
+    gpus = tf.config.list_physical_devices('GPU')
+    if gpus:
+        tf.config.experimental.set_memory_growth(gpus[0], True)
 
     count+= 1
 
-    
+
+print(summary_results)
+
+with open("random_nas_summary_results.json", "w") as f:
+    json.dump(summary_results, f)
 
 
 
