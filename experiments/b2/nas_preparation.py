@@ -18,7 +18,7 @@ if gpus:
         print(e)
 else:
     print("⚠️ No GPU detected.")
-    
+
 # from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow.keras import layers, models, optimizers, callbacks
 import tensorflow_model_optimization as tfmot
@@ -194,6 +194,8 @@ for cfg in model_configs:
 
     train_time = time.time() - start_train
 
+    print(f"Traning Time: {train_time}")
+
     model.load_weights("nas_dscnn.weights.h5")
 
     # measure inference latency
@@ -217,7 +219,7 @@ for cfg in model_configs:
     test_loss, test_acc = model.evaluate(X_test, y_test, verbose=0)
     print(f"Test accuracy: {test_acc * 100:.2f}%")
 
-    summary_results[count] = [test_loss, test_acc, avg_latency, model_size]
+    summary_results[count] = [test_loss, test_acc, avg_latency, model_size, train_time, cfg]
 
     tf.keras.backend.clear_session()
     gc.collect()
