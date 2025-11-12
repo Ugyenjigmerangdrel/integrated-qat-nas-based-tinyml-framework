@@ -238,13 +238,34 @@ def evaluate_saved_model(model_path, X_train, y_train, X_val, y_val, X_test, y_t
 
     return train_loss, train_acc, val_loss, val_acc, test_loss, test_acc
 
-def evaluate_saved_qat_model(model_path, X_train, y_train, X_val, y_val, X_test, y_test):
-    with tfmot.quantization.keras.quantize_scope():
-        model = keras.models.load_model(model_path,  compile=False)
-    # model.summary()
+def evaluate_saved_qat_model(
+    weight_path,
+    build_float_model_fn,  
+    input_shape,
+    num_classes,
+    cfg,
+    X_train, y_train, X_val, y_val, X_test, y_test,
+    optimizer=None,
+):
 
-    train_loss, train_acc = model.evaluate(X_train, y_train, verbose=0)
-    val_loss, val_acc = model.evaluate(X_val, y_val, verbose=0)
-    test_loss, test_acc = model.evaluate(X_test, y_test, verbose=0)
+    float_model = build_float_model_fn(input_shape, num_classes, cfg)
+
+    with tfmot.quantization.keras.quantize_scope():
+        qat_model = tfmot.quantization.keras.quantize_model(float_model)
+
+    if optimizer is None:
+        optimizer = keras.optimizers.Adam(5e-4)
+
+    qat_model.compile(
+        optimizer=optimizer,
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"],
+    )
+
+    qat_model.load_weights(weight_path)
+
+    train_loss, train_acc = qat_model.evaluate(X_train, y_train, verbose=0)
+    val_loss,   val_acc   = qat_model.evaluate(X_val,   y_val,   verbose=0)
+    test_loss,  test_acc  = qat_model.evaluate(X_test,  y_test,  verbose=0)
 
     return train_loss, train_acc, val_loss, val_acc, test_loss, test_acc

@@ -16,7 +16,7 @@ print(gpu_status)
 from tensorflow_model_optimization.python.core.keras.compat import keras
 
 from helpers.data_loader import load_data
-from helpers.model import evaluate_saved_model, evaluate_saved_qat_model
+from helpers.model import build_model, evaluate_saved_model, evaluate_saved_qat_model
 
 SEED = 42
 os.environ['PYTHONHASHSEED'] = str(SEED)
@@ -32,13 +32,26 @@ print("Length of Training Data", len(X_train))
 print("Number of Clases", num_classes)
 print("Shape of Input", input_shape)
 
+
+
+int8bo_top_cfg = {"num_dscnn_layers": 2, "first_conv_filters": 64, "first_conv_kernel": (8, 4), "first_conv_stride": (2, 2), "depthwise_kernel": (5, 5), "pointwise_filters": 96, "pooling_function": "max", "dropout_rate": 0.3}
+rs_top_cfg = {"num_dscnn_layers": 2, "first_conv_filters": 64, "first_conv_kernel": (10, 4), "first_conv_stride": (2, 2), "depthwise_kernel": (5, 5), "pointwise_filters": 96, "pooling_function": "max", "dropout_rate": 0.0}
+vabo_top_cfg = {"num_dscnn_layers": 6, "first_conv_filters": 64, "first_conv_kernel": (8, 4), "first_conv_stride": (2, 2), "depthwise_kernel": (3, 3), "pointwise_filters": 96, "pooling_function": "gap", "dropout_rate": 0.3}
+
+
+model_config = {
+   "best_rs_qat_dscnn.weights.h4": rs_top_cfg,
+   "best_vabo_qat_dscnn.weights.h4": vabo_top_cfg,
+   "best_int8bo_qat_dscnn.weights.h4": int8bo_top_cfg,
+}
+
 model_paths = [
     "./models/best_rs_dscnn.keras",
-    "./models/best_rs_qat_dscnn.keras",
+    "./models/best_rs_qat_dscnn.weights.h4",
     "./models/best_vabo_dscnn.keras",
-    "./models/best_vabo_qat_dscnn.keras",
+    "./models/best_vabo_qat_dscnn.weights.h4",
     "./models/best_int8bo_dscnn.keras",
-    "./models/best_int8bo_qat_dscnn.keras"
+    "./models/best_int8bo_qat_dscnn.weights.h4"
 ]
 
 results = []
@@ -46,8 +59,15 @@ results = []
 for path in model_paths:
     if "qat" in path:
         train_loss, train_acc, val_loss, val_acc, test_loss, test_acc = evaluate_saved_qat_model(
-            path, X_train, y_train, X_val, y_val, X_test, y_test
+            path,
+            build_model,  
+            input_shape,
+            num_classes,
+            model_config[path.split("/")[-1]],
+            X_train, y_train, X_val, y_val, X_test, y_test,
+            optimizer=None,
         )
+        
         results.append({
             "Model": path.split("/")[-1],
             "Train Loss": train_loss,
