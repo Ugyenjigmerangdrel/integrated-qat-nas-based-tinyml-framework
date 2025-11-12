@@ -58,7 +58,7 @@ results = []
 
 for path in model_paths:
     if "qat" in path:
-        train_loss, train_acc, val_loss, val_acc, test_loss, test_acc = evaluate_saved_qat_model(
+        train_loss, train_acc, val_loss, val_acc, test_loss, test_acc, int8_acc, int8_size, int8_latency = evaluate_saved_qat_model(
             path,
             build_model,  
             input_shape,
@@ -75,10 +75,13 @@ for path in model_paths:
             "Val Loss": val_loss,
             "Val Acc": val_acc,
             "Test Loss": test_loss,
-            "Test Acc": test_acc
+            "Test Acc": test_acc,
+            "INT8 Accuracy": int8_acc,
+            "INT8 Latency": int8_latency,
+            "INT8 Model Size": int8_size
         })
     else:
-        train_loss, train_acc, val_loss, val_acc, test_loss, test_acc = evaluate_saved_model(
+        train_loss, train_acc, val_loss, val_acc, test_loss, test_acc, int8_acc, int8_size, int8_latency = evaluate_saved_model(
             path, X_train, y_train, X_val, y_val, X_test, y_test
         )
         results.append({
@@ -88,7 +91,10 @@ for path in model_paths:
             "Val Loss": val_loss,
             "Val Acc": val_acc,
             "Test Loss": test_loss,
-            "Test Acc": test_acc
+            "Test Acc": test_acc,
+            "INT8 Accuracy": int8_acc,
+            "INT8 Latency": int8_latency,
+            "INT8 Model Size": int8_size
         })
 
 

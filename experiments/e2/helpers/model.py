@@ -2,6 +2,10 @@ import math
 from tensorflow_model_optimization.python.core.keras.compat import keras
 import tensorflow_model_optimization as tfmot
 import pandas as pd
+import tensorflow as tf
+import time
+import os
+import numpy as np
 
 def build_dscnn_layer(x, depthwise_kernel=(3,3), pointwise_filters=64):
     x = keras.layers.DepthwiseConv2D(depthwise_kernel, padding="same", use_bias=False)(x)
@@ -231,12 +235,39 @@ def evaluate_saved_model(model_path, X_train, y_train, X_val, y_val, X_test, y_t
 
     model = keras.models.load_model(model_path)
     # model.summary()
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
+
+    converter.optimizations = [tf.lite.Optimize.DEFAULT]
+
+    def representative_data_gen():
+        for i in range(100):
+            sample = X_train[i:i+1].astype("float32")
+            yield [sample]
+
+    converter.representative_dataset = representative_data_gen
+    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+    converter.inference_input_type = tf.uint8
+    converter.inference_output_type = tf.uint8
+
+    tflite_model = converter.convert()
+
+    with open("./models/eval-best-dscnn-model.tflite", "wb") as f:
+        f.write(tflite_model)
+
+    print(f"Pre PTQ Test accuracy: {test_acc * 100:.2f}%")
+    int8_ptq_evals = evaluate_int8_ptq_model(
+        X_test, y_test, "./models/eval-best-dscnn-model.tflite", 
+        reps_per_sample=5,            
+        warmup_runs=3,                
+        num_samples=200,              
+        num_threads=None              
+    )
 
     train_loss, train_acc = model.evaluate(X_train, y_train, verbose=0)
     val_loss, val_acc = model.evaluate(X_val, y_val, verbose=0)
     test_loss, test_acc = model.evaluate(X_test, y_test, verbose=0)
 
-    return train_loss, train_acc, val_loss, val_acc, test_loss, test_acc
+    return train_loss, train_acc, val_loss, val_acc, test_loss, test_acc, int8_ptq_evals['accuracy'], int8_ptq_evals['model_size_kb'], int8_ptq_evals['latency_ms_mean']
 
 def evaluate_saved_qat_model(
     weight_path,
@@ -264,8 +295,139 @@ def evaluate_saved_qat_model(
 
     qat_model.load_weights(weight_path)
 
+    converter = tf.lite.TFLiteConverter.from_keras_model(qat_model)
+
+    converter.optimizations = [tf.lite.Optimize.DEFAULT]
+
+    def representative_data_gen():
+        for i in range(100):
+            sample = X_train[i:i+1].astype("float32")
+            yield [sample]
+
+    converter.representative_dataset = representative_data_gen
+    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+    converter.inference_input_type = tf.uint8
+    converter.inference_output_type = tf.uint8
+
+    tflite_model = converter.convert()
+
+    with open("./models/eval-best-dscnn-model.tflite", "wb") as f:
+        f.write(tflite_model)
+
+    print(f"Pre PTQ Test accuracy: {test_acc * 100:.2f}%")
+    int8_ptq_evals = evaluate_int8_ptq_model(
+        X_test, y_test, "./models/eval-best-dscnn-model.tflite", 
+        reps_per_sample=5,            
+        warmup_runs=3,                
+        num_samples=200,              
+        num_threads=None              
+    )
+
     train_loss, train_acc = qat_model.evaluate(X_train, y_train, verbose=0)
     val_loss,   val_acc   = qat_model.evaluate(X_val,   y_val,   verbose=0)
     test_loss,  test_acc  = qat_model.evaluate(X_test,  y_test,  verbose=0)
 
-    return train_loss, train_acc, val_loss, val_acc, test_loss, test_acc
+    return train_loss, train_acc, val_loss, val_acc, test_loss, test_acc, int8_ptq_evals['accuracy'], int8_ptq_evals['model_size_kb'], int8_ptq_evals['latency_ms_mean']
+
+
+
+def _quantize(sample_f32, scale, zero_point, dtype):
+    """Quantize float32 -> uint8/int8 if needed."""
+    if scale == 0:
+        return sample_f32.astype(dtype)
+    q = sample_f32 / scale + zero_point
+    if dtype == np.uint8:
+        q = np.clip(q, 0, 255).astype(np.uint8)
+    elif dtype == np.int8:
+        q = np.clip(np.round(q), -128, 127).astype(np.int8)
+    else:
+        # model expects float; just return float32
+        q = sample_f32.astype(dtype)
+    return q
+
+def evaluate_int8_ptq_model(
+    X_test, y_test, model_path, *,
+    reps_per_sample=5,            # repeats per sample (after warmup)
+    warmup_runs=3,                # warmup invokes (not timed)
+    num_samples=200,              # cap #samples for timing to keep it quick
+    num_threads=None              # e.g., 1 for deterministic, or 4 for speed
+):
+    model_size_kb = os.path.getsize(model_path) / 1024.0
+
+    interpreter = tf.lite.Interpreter(model_path=model_path, num_threads=num_threads)
+    interpreter.allocate_tensors()
+
+    input_details  = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+    in_idx  = input_details[0]['index']
+    out_idx = output_details[0]['index']
+
+    in_scale,  in_zero  = input_details[0]['quantization']
+    out_scale, out_zero = output_details[0]['quantization']
+    in_dtype  = input_details[0]['dtype']
+    out_dtype = output_details[0]['dtype']
+
+    print(f"Input quantization:  scale={in_scale}  zero_point={in_zero}  dtype={in_dtype}")
+    print(f"Output quantization: scale={out_scale} zero_point={out_zero} dtype={out_dtype}")
+
+    # Evaluate accuracy (on the whole test set) while we’re here
+    correct = 0
+    for i in range(len(X_test)):
+        x = _quantize(X_test[i:i+1].astype(np.float32), in_scale, in_zero, in_dtype)
+        interpreter.set_tensor(in_idx, x)
+        interpreter.invoke()
+        logits = interpreter.get_tensor(out_idx)
+
+        # dequantize if needed
+        if out_scale != 0 and np.issubdtype(out_dtype, np.integer):
+            logits = (logits.astype(np.float32) - out_zero) * out_scale
+
+        if np.argmax(logits) == y_test[i]:
+            correct += 1
+    accuracy = correct / len(X_test)
+
+    # -------- Inference latency benchmarking (TFLite interpreter) --------
+    # Use a random subset to estimate latency robustly.
+    n = min(num_samples, len(X_test))
+    idxs = np.random.choice(len(X_test), size=n, replace=False)
+    latencies_ms = []
+
+    # Prepare one quantized tensor buffer to avoid reallocations in the loop
+    sample0 = _quantize(X_test[idxs[0]:idxs[0]+1].astype(np.float32), in_scale, in_zero, in_dtype)
+    interpreter.set_tensor(in_idx, sample0)
+    for _ in range(warmup_runs):
+        interpreter.invoke()
+        _ = interpreter.get_tensor(out_idx)
+
+    for i in idxs:
+        x = _quantize(X_test[i:i+1].astype(np.float32), in_scale, in_zero, in_dtype)
+
+        # Repeat a few times per sample and average (reduces jitter)
+        t0 = time.perf_counter()
+        for _ in range(reps_per_sample):
+            interpreter.set_tensor(in_idx, x)
+            interpreter.invoke()
+            _ = interpreter.get_tensor(out_idx)
+        t1 = time.perf_counter()
+
+        latencies_ms.append(((t1 - t0) / reps_per_sample) * 1000.0)
+
+    latencies_ms = np.array(latencies_ms)
+    latency_mean  = float(latencies_ms.mean())
+    latency_median= float(np.median(latencies_ms))
+    latency_p95   = float(np.percentile(latencies_ms, 95))
+
+    print(f"TFLite INT8 accuracy: {accuracy*100:.2f}%")
+    print(f"Latency (ms/sample) — mean: {latency_mean:.3f}, median: {latency_median:.3f}, p95: {latency_p95:.3f}")
+    print(f"Model size: {model_size_kb:.2f} KB")
+
+    return {
+        "accuracy": accuracy,
+        "model_size_kb": model_size_kb,
+        "latency_ms_mean": latency_mean,
+        "latency_ms_median": latency_median,
+        "latency_ms_p95": latency_p95,
+        "n_timed_samples": int(n),
+        "reps_per_sample": int(reps_per_sample),
+        "threads": num_threads,
+    }
