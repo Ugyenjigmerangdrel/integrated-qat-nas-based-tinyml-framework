@@ -15,7 +15,7 @@ print(gpu_status)
 from tensorflow_model_optimization.python.core.keras.compat import keras
 
 from helpers.data_loader import load_data
-from helpers.model import build_model, train_model
+from helpers.model import evaluate_saved_model
 
 SEED = 42
 os.environ['PYTHONHASHSEED'] = str(SEED)
@@ -31,20 +31,5 @@ print("Length of Training Data", len(X_train))
 print("Number of Clases", num_classes)
 print("Shape of Input", input_shape)
 
-
-rs_top_cfg = {"num_dscnn_layers": 2, "first_conv_filters": 64, "first_conv_kernel": (10, 4), "first_conv_stride": (2, 2), "depthwise_kernel": (5, 5), "pointwise_filters": 96, "pooling_function": "max", "dropout_rate": 0.0}
-
-model = build_model(input_shape, num_classes, rs_top_cfg)
-
-initial_lr = 5e-4
-opt = keras.optimizers.Adam(learning_rate=initial_lr)
-
-train_loss, train_acc, val_loss, val_acc, test_loss, test_acc = train_model(model, opt, X_train, y_train, X_val, y_val, X_test, y_test, "./models/best_rs_dscnn.weights.h4", "./models/best_rs_dscnn.keras")
-
-print(train_acc, val_acc, test_acc)
-
-
-
-
-
-
+print("Top Random Search Derived Model Config Evaluation \n")
+print(evaluate_saved_model("./models/best_rs_dscnn.keras",X_train, y_train, X_val, y_val, X_test, y_test))

@@ -15,7 +15,7 @@ print(gpu_status)
 from tensorflow_model_optimization.python.core.keras.compat import keras
 
 from helpers.data_loader import load_data
-from helpers.model import build_model, train_model
+from helpers.model import build_model, train_qat_model
 
 SEED = 42
 os.environ['PYTHONHASHSEED'] = str(SEED)
@@ -39,7 +39,7 @@ model = build_model(input_shape, num_classes, rs_top_cfg)
 initial_lr = 5e-4
 opt = keras.optimizers.Adam(learning_rate=initial_lr)
 
-train_loss, train_acc, val_loss, val_acc, test_loss, test_acc = train_model(model, opt, X_train, y_train, X_val, y_val, X_test, y_test, "./models/best_rs_dscnn.weights.h4", "./models/best_rs_dscnn.keras")
+train_loss, train_acc, val_loss, val_acc, test_loss, test_acc = train_qat_model(model, opt, X_train, y_train, X_val, y_val, X_test, y_test, "./models/best_rs_dscnn.weights.h4", "./models/best_rs_dscnn.keras")
 
 print(train_acc, val_acc, test_acc)
 
