@@ -130,6 +130,15 @@ search_space_skopt = [
     Categorical([0.0, 0.2, 0.3], name="dropout_rate"),
 ]
 
+
+for dim in search_space_skopt:
+    if hasattr(dim, 'categories'):
+        for c in dim.categories:
+            print(dim.name, c, type(c))
+
+exit()
+
+
 def evaluate_int8_ptq_model(X_test, y_test, model_path):
     interpreter = tf.lite.Interpreter(model_path=model_path)
     interpreter.allocate_tensors()
@@ -250,6 +259,13 @@ def objective(**params):
     print(f"Pre PTQ Test accuracy: {test_acc * 100:.2f}%")
     int8_accuracy = evaluate_int8_ptq_model(X_test, y_test, "e1a-bo-best-dscnn-model-int8.tflite")
     
+    tf.keras.backend.clear_session()
+    gc.collect()
+    
+    gpus = tf.config.list_physical_devices('GPU')
+    if gpus:
+        tf.config.experimental.set_memory_growth(gpus[0], True)
+
     return 1 - int8_accuracy  
 
 cfg = {"num_dscnn_layers": 2, "first_conv_filters": 64, "first_conv_kernel": (10, 4), "first_conv_stride": (2, 2), "depthwise_kernel": (5, 5), "pointwise_filters": 96, "pooling_function": "max", "dropout_rate": 0.0}
