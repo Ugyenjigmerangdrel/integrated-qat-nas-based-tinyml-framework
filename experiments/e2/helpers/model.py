@@ -230,7 +230,7 @@ def train_qat_model(model, optimizer, X_train, y_train, X_val, y_val, X_test, y_
 def evaluate_saved_model(model_path, X_train, y_train, X_val, y_val, X_test, y_test):
 
     model = keras.models.load_model(model_path)
-    model.summary()
+    # model.summary()
 
     train_loss, train_acc = model.evaluate(X_train, y_train, verbose=0)
     val_loss, val_acc = model.evaluate(X_val, y_val, verbose=0)
