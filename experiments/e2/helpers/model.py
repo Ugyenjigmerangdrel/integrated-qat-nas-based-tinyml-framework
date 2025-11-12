@@ -240,7 +240,7 @@ def evaluate_saved_model(model_path, X_train, y_train, X_val, y_val, X_test, y_t
 
 def evaluate_saved_qat_model(model_path, X_train, y_train, X_val, y_val, X_test, y_test):
     with tfmot.quantization.keras.quantize_scope():
-        model = keras.models.load_model(model_path)
+        model = keras.models.load_model(model_path,  compile=False)
     # model.summary()
 
     train_loss, train_acc = model.evaluate(X_train, y_train, verbose=0)
