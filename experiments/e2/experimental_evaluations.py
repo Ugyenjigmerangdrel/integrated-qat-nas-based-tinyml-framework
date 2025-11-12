@@ -40,18 +40,18 @@ vabo_top_cfg = {"num_dscnn_layers": 6, "first_conv_filters": 64, "first_conv_ker
 
 
 model_config = {
-   "best_rs_qat_dscnn.weights.h4": rs_top_cfg,
-   "best_vabo_qat_dscnn.weights.h4": vabo_top_cfg,
-   "best_int8bo_qat_dscnn.weights.h4": int8bo_top_cfg,
+   "best_rs_qat_dscnn.weights.h5": rs_top_cfg,
+   "best_vabo_qat_dscnn.weights.h5": vabo_top_cfg,
+   "best_int8bo_qat_dscnn.weights.h5": int8bo_top_cfg,
 }
 
 model_paths = [
     "./models/best_rs_dscnn.keras",
-    # "./models/best_rs_qat_dscnn.weights.h4",
+    "./models/rs/best_rs_qat_dscnn.weights.h5",
     "./models/best_vabo_dscnn.keras",
-    # "./models/best_vabo_qat_dscnn.weights.h4",
+    "./models/vabo/best_vabo_qat_dscnn.weights.h5",
     "./models/best_int8bo_dscnn.keras",
-    # "./models/best_int8bo_qat_dscnn.weights.h4"
+    "./models/int8bo/best_int8bo_qat_dscnn.weights.h5"
 ]
 
 results = []
