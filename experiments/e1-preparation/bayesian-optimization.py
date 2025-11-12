@@ -136,7 +136,7 @@ for dim in search_space_skopt:
         for c in dim.categories:
             print(dim.name, c, type(c))
 
-exit()
+# exit()
 
 
 def evaluate_int8_ptq_model(X_test, y_test, model_path):
@@ -277,11 +277,36 @@ x0 = [
 result = gp_minimize(
     func=objective,
     dimensions=search_space_skopt,
-    x0=x0,
     n_initial_points=5,
-    n_calls=20
+    n_calls=10
 )
+
 
 print("Best parameters:", result.x)
 print("Best INT8 accuracy:", 1 - result.fun)
 
+import pandas as pd
+import json
+
+# Convert to readable DataFrame
+records = []
+for params, func_val in zip(result.x_iters, result.func_vals):
+    accuracy = 1 - func_val
+    record = {
+        "num_dscnn_layers": params[0],
+        "first_conv_filters": params[1],
+        "first_conv_kernel": params[2],
+        "first_conv_stride": params[3],
+        "depthwise_kernel": params[4],
+        "pointwise_filters": params[5],
+        "pooling_function": params[6],
+        "dropout_rate": params[7],
+        "int8_accuracy": accuracy
+    }
+    records.append(record)
+
+df = pd.DataFrame(records)
+print(df)
+
+df.to_csv("bayesian_optimization_results.csv", index=False)
+df.to_json("bayesian_optimization_results.json", orient="records", indent=2)
