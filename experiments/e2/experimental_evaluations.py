@@ -34,11 +34,11 @@ print("Shape of Input", input_shape)
 
 model_paths = [
     "./models/best_rs_dscnn.keras",
-    "./models/best_rs_qat_dscnn.keras",
+    # "./models/best_rs_qat_dscnn.keras",
     "./models/best_vabo_dscnn.keras",
-    "./models/best_vabo_qat_dscnn.keras",
+    # "./models/best_vabo_qat_dscnn.keras",
     "./models/best_int8bo_dscnn.keras",
-    "./models/best_int8bo_qat_dscnn.keras"
+    # "./models/best_int8bo_qat_dscnn.keras"
 ]
 
 results = []
