@@ -47,11 +47,11 @@ model_config = {
 
 model_paths = [
     "./models/best_rs_dscnn.keras",
-    "./models/best_rs_qat_dscnn.weights.h4",
+    # "./models/best_rs_qat_dscnn.weights.h4",
     "./models/best_vabo_dscnn.keras",
-    "./models/best_vabo_qat_dscnn.weights.h4",
+    # "./models/best_vabo_qat_dscnn.weights.h4",
     "./models/best_int8bo_dscnn.keras",
-    "./models/best_int8bo_qat_dscnn.weights.h4"
+    # "./models/best_int8bo_qat_dscnn.weights.h4"
 ]
 
 results = []
