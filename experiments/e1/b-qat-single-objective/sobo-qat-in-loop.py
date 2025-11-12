@@ -246,7 +246,7 @@ def objective(**params):
     batch_size = 100
     steps_per_epoch = max(1, X_train.shape[0] // batch_size)
     total_iterations = 20000
-    epochs = math.ceil(total_iterations / steps_per_epoch)
+    epochs = 10
 
     print(f"Steps per epoch: {steps_per_epoch}")
     print(f"Planned epochs (approx 20K iterations): {epochs}")
