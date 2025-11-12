@@ -16,7 +16,7 @@ print(gpu_status)
 from tensorflow_model_optimization.python.core.keras.compat import keras
 
 from helpers.data_loader import load_data
-from helpers.model import evaluate_saved_model
+from helpers.model import evaluate_saved_model, evaluate_saved_qat_model
 
 SEED = 42
 os.environ['PYTHONHASHSEED'] = str(SEED)
@@ -34,28 +34,42 @@ print("Shape of Input", input_shape)
 
 model_paths = [
     "./models/best_rs_dscnn.keras",
-    # "./models/best_rs_qat_dscnn.keras",
+    "./models/best_rs_qat_dscnn.keras",
     "./models/best_vabo_dscnn.keras",
-    # "./models/best_vabo_qat_dscnn.keras",
+    "./models/best_vabo_qat_dscnn.keras",
     "./models/best_int8bo_dscnn.keras",
-    # "./models/best_int8bo_qat_dscnn.keras"
+    "./models/best_int8bo_qat_dscnn.keras"
 ]
 
 results = []
 
 for path in model_paths:
-    train_loss, train_acc, val_loss, val_acc, test_loss, test_acc = evaluate_saved_model(
-        path, X_train, y_train, X_val, y_val, X_test, y_test
-    )
-    results.append({
-        "Model": path.split("/")[-1],
-        "Train Loss": train_loss,
-        "Train Acc": train_acc,
-        "Val Loss": val_loss,
-        "Val Acc": val_acc,
-        "Test Loss": test_loss,
-        "Test Acc": test_acc
-    })
+    if "qat" in path:
+        train_loss, train_acc, val_loss, val_acc, test_loss, test_acc = evaluate_saved_qat_model(
+            path, X_train, y_train, X_val, y_val, X_test, y_test
+        )
+        results.append({
+            "Model": path.split("/")[-1],
+            "Train Loss": train_loss,
+            "Train Acc": train_acc,
+            "Val Loss": val_loss,
+            "Val Acc": val_acc,
+            "Test Loss": test_loss,
+            "Test Acc": test_acc
+        })
+    else:
+        train_loss, train_acc, val_loss, val_acc, test_loss, test_acc = evaluate_saved_model(
+            path, X_train, y_train, X_val, y_val, X_test, y_test
+        )
+        results.append({
+            "Model": path.split("/")[-1],
+            "Train Loss": train_loss,
+            "Train Acc": train_acc,
+            "Val Loss": val_loss,
+            "Val Acc": val_acc,
+            "Test Loss": test_loss,
+            "Test Acc": test_acc
+        })
 
 
 df_results = pd.DataFrame(results)
