@@ -191,12 +191,14 @@ def parse_tuple_str(s):
     return s
 
 
+summary_results = []
+
 @use_named_args(search_space_skopt)
 def objective(**params):
     # Build and train your model using params
     for key in ["first_conv_kernel", "first_conv_stride", "depthwise_kernel"]:
         params[key] = parse_tuple_str(params[key])
-        
+
     model = build_model(input_shape, num_classes, params)
 
     initial_lr = 5e-4
@@ -224,6 +226,7 @@ def objective(**params):
     print(f"Steps per epoch: {steps_per_epoch}")
     print(f"Planned epochs (approx 20K iterations): {epochs}")
 
+    start_train = time.time()
     history = model.fit(
         X_train,
         y_train,
@@ -233,13 +236,33 @@ def objective(**params):
         callbacks=[ckpt_callback],
         verbose=1,
     )
+    train_time = time.time() - start_train
+
+    print(f"Traning Time: {train_time}")
 
     val_acc = history.history["val_accuracy"][-1]
-
+    
 
     model.load_weights("e1a-bo-best-dscnn-model.weights.h5")
     test_loss, test_acc = model.evaluate(X_test, y_test, verbose=0)
     
+    # measure inference latency
+    sample_input = X_test[:1]
+    _ = model.predict(sample_input, verbose=0)
+
+    runs = 50
+    start_infer = time.time()
+    for _ in range(runs):
+        _ = model.predict(sample_input, verbose=0)
+    end_infer = time.time()
+
+    avg_latency = (end_infer - start_infer) / runs
+    print(f"Average inference latency: {avg_latency*1000:.3f} ms per sample")
+
+    # measure model size
+    model.save("temp_model.h5", include_optimizer=False)
+    model_size = os.path.getsize("temp_model.h5") / 1024  # KB
+    print(f"Model size: {model_size:.2f} KB")
 
     model.save("e1a-bo-best-dscnn-model.keras")
 
@@ -275,6 +298,12 @@ def objective(**params):
     gpus = tf.config.list_physical_devices('GPU')
     if gpus:
         tf.config.experimental.set_memory_growth(gpus[0], True)
+
+    summary_results.append([test_loss, test_acc, avg_latency, model_size, train_time, int8_accuracy, params])
+
+    with open("summary_results.txt", "a") as f:
+        f.write(str([test_loss, test_acc, avg_latency, model_size, train_time, int8_accuracy, params]) + "\n")
+
 
     return 1 - int8_accuracy  
 
