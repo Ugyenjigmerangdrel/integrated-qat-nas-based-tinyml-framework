@@ -7,7 +7,7 @@ import time
 import os
 
 import tensorflow as tf
-from e2.helpers.initialize_gpu import initialize_gpu
+from helpers.initialize_gpu import initialize_gpu
 
 gpu_status = initialize_gpu()
 print(gpu_status)
@@ -16,8 +16,8 @@ print(gpu_status)
 import tensorflow_model_optimization as tfmot
 from tensorflow_model_optimization.python.core.keras.compat import keras
 
-from e2.helpers.data_loader import load_data
-from e2.helpers.model import build_model, train_model
+from helpers.data_loader import load_data
+from helpers.model import build_model, train_model
 
 SEED = 42
 os.environ['PYTHONHASHSEED'] = str(SEED)
