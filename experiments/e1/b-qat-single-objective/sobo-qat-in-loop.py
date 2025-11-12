@@ -207,6 +207,8 @@ def objective(**params):
     # q_aware stands for for quantization aware.
     q_aware_model = quantize_model(model)
 
+    initial_lr = 5e-4
+    opt = keras.optimizers.Adam(learning_rate=initial_lr)
     # `quantize_model` requires a recompile.
     q_aware_model.compile(optimizer=opt,
                 loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
