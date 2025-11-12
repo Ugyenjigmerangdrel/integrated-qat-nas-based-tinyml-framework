@@ -254,7 +254,7 @@ def evaluate_saved_model(model_path, X_train, y_train, X_val, y_val, X_test, y_t
     with open("./models/eval-best-dscnn-model.tflite", "wb") as f:
         f.write(tflite_model)
 
-    print(f"Pre PTQ Test accuracy: {test_acc * 100:.2f}%")
+    
     int8_ptq_evals = evaluate_int8_ptq_model(
         X_test, y_test, "./models/eval-best-dscnn-model.tflite", 
         reps_per_sample=5,            
@@ -314,7 +314,7 @@ def evaluate_saved_qat_model(
     with open("./models/eval-best-dscnn-model.tflite", "wb") as f:
         f.write(tflite_model)
 
-    print(f"Pre PTQ Test accuracy: {test_acc * 100:.2f}%")
+    
     int8_ptq_evals = evaluate_int8_ptq_model(
         X_test, y_test, "./models/eval-best-dscnn-model.tflite", 
         reps_per_sample=5,            
