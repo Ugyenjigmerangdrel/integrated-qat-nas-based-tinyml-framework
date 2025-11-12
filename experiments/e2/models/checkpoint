@@ -1,0 +1,2 @@
+model_checkpoint_path: "best_rs_dscnn.weights.h4"
+all_model_checkpoint_paths: "best_rs_dscnn.weights.h4"
