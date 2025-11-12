@@ -122,13 +122,14 @@ search_space = {
 search_space_skopt = [
     Integer(2, 6, name="num_dscnn_layers"),
     Categorical([32, 64], name="first_conv_filters"),
-    Categorical([(10, 4), (8, 4)], name="first_conv_kernel"),
-    Categorical([(1, 1), (2, 2)], name="first_conv_stride"),
-    Categorical([(3, 3), (5, 5)], name="depthwise_kernel"),
+    Categorical(["(10,4)", "(8,4)"], name="first_conv_kernel"),
+    Categorical(["(1,1)", "(2,2)"], name="first_conv_stride"),
+    Categorical(["(3,3)", "(5,5)"], name="depthwise_kernel"),
     Categorical([32, 64, 96], name="pointwise_filters"),
     Categorical(["gap", "max"], name="pooling_function"),
     Categorical([0.0, 0.2, 0.3], name="dropout_rate"),
 ]
+
 
 
 for dim in search_space_skopt:
@@ -184,9 +185,18 @@ def evaluate_int8_ptq_model(X_test, y_test, model_path):
 
     return accuracy
 
+def parse_tuple_str(s):
+    if isinstance(s, str) and s.startswith("(") and s.endswith(")"):
+        return tuple(map(int, s.strip("()").split(",")))
+    return s
+
+
 @use_named_args(search_space_skopt)
 def objective(**params):
     # Build and train your model using params
+    for key in ["first_conv_kernel", "first_conv_stride", "depthwise_kernel"]:
+        params[key] = parse_tuple_str(params[key])
+        
     model = build_model(input_shape, num_classes, params)
 
     initial_lr = 5e-4
