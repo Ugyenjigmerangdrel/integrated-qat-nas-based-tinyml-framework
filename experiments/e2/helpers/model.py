@@ -1,6 +1,7 @@
 import math
 from tensorflow_model_optimization.python.core.keras.compat import keras
 import tensorflow_model_optimization as tfmot
+import pandas as pd
 
 def build_dscnn_layer(x, depthwise_kernel=(3,3), pointwise_filters=64):
     x = keras.layers.DepthwiseConv2D(depthwise_kernel, padding="same", use_bias=False)(x)

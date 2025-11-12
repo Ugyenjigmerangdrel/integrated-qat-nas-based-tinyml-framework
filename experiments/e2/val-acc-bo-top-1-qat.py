@@ -39,7 +39,7 @@ model = build_model(input_shape, num_classes, vabo_top_cfg)
 initial_lr = 5e-4
 opt = keras.optimizers.Adam(learning_rate=initial_lr)
 
-train_loss, train_acc, val_loss, val_acc, test_loss, test_acc = train_qat_model(model, opt, X_train, y_train, X_val, y_val, X_test, y_test, "./models/best_vabo_qat_dscnn.weights.h4", "./models/best_vabo_qat_dscnn.keras")
+train_loss, train_acc, val_loss, val_acc, test_loss, test_acc = train_qat_model(model, opt, X_train, y_train, X_val, y_val, X_test, y_test, "./models/best_vabo_qat_dscnn.weights.h5", "./models/best_vabo_qat_dscnn.keras")
 
 print(train_acc, val_acc, test_acc)
 
