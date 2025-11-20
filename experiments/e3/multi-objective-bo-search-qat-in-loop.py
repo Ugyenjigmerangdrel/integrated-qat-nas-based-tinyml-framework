@@ -132,7 +132,7 @@ def objective(**params):
     model_size = os.path.getsize("temp_model.h5") / 1024  # KB
     print(f"Model size: {model_size:.2f} KB")
 
-    q_aware_model.save("./models/mobo-best-dscnn-model.keras")
+    q_aware_model.save("./models/qat-mobo-best-dscnn-model.keras")
 
     converter = tf.lite.TFLiteConverter.from_keras_model(q_aware_model)
 
@@ -150,12 +150,12 @@ def objective(**params):
 
     tflite_model = converter.convert()
 
-    with open("./models/mobo-best-dscnn-model.tflite", "wb") as f:
+    with open("./models/qat-mobo-best-dscnn-model.tflite", "wb") as f:
         f.write(tflite_model)
 
     print(f"Pre PTQ Test accuracy: {test_acc * 100:.2f}%")
     int8_ptq_evals = evaluate_int8_ptq_model(
-        X_test, y_test, "./models/mobo-best-dscnn-model.tflite", 
+        X_test, y_test, "./models/qat-mobo-best-dscnn-model.tflite", 
         reps_per_sample=5,            
         warmup_runs=3,                
         num_samples=200,              
@@ -183,7 +183,7 @@ def objective(**params):
 
     summary_results.append([J, test_loss, acc_fp32, acc_int8, int8_drop, avg_latency, lat_ms, model_size, size_kb, train_time, params])
 
-    with open("summary_results.txt", "a") as f:
+    with open("mobo-summary_results.txt", "a") as f:
         f.write(str([J, test_loss, acc_fp32, acc_int8, int8_drop, avg_latency, lat_ms, model_size, size_kb, train_time, params]) + "\n")
 
     return J  
