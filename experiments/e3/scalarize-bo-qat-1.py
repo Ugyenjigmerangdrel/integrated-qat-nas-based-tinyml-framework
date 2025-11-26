@@ -183,7 +183,7 @@ def objective(**params):
 
     summary_results.append([J, test_loss, acc_fp32, acc_int8, int8_drop, avg_latency, lat_ms, model_size, size_kb, train_time, params])
 
-    with open("mobo-summary_results.txt", "a") as f:
+    with open("scalarize-bo-qat-1.txt", "a") as f:
         f.write(str([J, test_loss, acc_fp32, acc_int8, int8_drop, avg_latency, lat_ms, model_size, size_kb, train_time, params]) + "\n")
 
     return J  
@@ -223,10 +223,8 @@ for params, func_val in zip(result.x_iters, result.func_vals):
 df = pd.DataFrame(records)
 print(df)
 
-df.to_csv("./results/qat_mobo_results.csv", index=False)
-df.to_json("./results/qat_mobo_results.json", orient="records", indent=2)
-
-
+df.to_csv("qat_mobo_results.csv", index=False)
+df.to_json("qat_mobo_results.json", orient="records", indent=2)
 
 
 

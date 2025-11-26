@@ -13,7 +13,6 @@ gpu_status = initialize_gpu()
 print(gpu_status)
 
 from tensorflow_model_optimization.python.core.keras.compat import keras
-import tensorflow_model_optimization as tfmot
 
 from helpers.data_loader import load_data
 from helpers.model import build_model, train_model, evaluate_int8_ptq_model
@@ -69,19 +68,16 @@ def objective(**params):
 
     model = build_model(input_shape, num_classes, params)
 
-    quantize_model = tfmot.quantization.keras.quantize_model
-
-    # q_aware stands for for quantization aware.
-    q_aware_model = quantize_model(model)
-
     initial_lr = 5e-4
     opt = keras.optimizers.Adam(learning_rate=initial_lr)
-    q_aware_model.compile(optimizer=opt,
-                loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                metrics=['accuracy'])
+    model.compile(
+        optimizer=opt,
+        loss="sparse_categorical_crossentropy",
+        metrics=["accuracy"]
+    )
 
     ckpt_callback = keras.callbacks.ModelCheckpoint(
-    "./models/qat-mobo-best-dscnn-model.weights.h5",  
+    "./models/mobo-best-dscnn-model.weights.h5",  
     monitor="val_accuracy",
     save_best_only=True,
     save_weights_only=True,
@@ -98,7 +94,7 @@ def objective(**params):
     print(f"Planned epochs (approx 20K iterations): {epochs}")
 
     start_train = time.time()
-    history = q_aware_model.fit(
+    history = model.fit(
         X_train,
         y_train,
         batch_size=batch_size,
@@ -111,30 +107,30 @@ def objective(**params):
 
     print(f"Traning Time: {train_time}")
 
-    q_aware_model.load_weights("./models/qat-mobo-best-dscnn-model.weights.h5")
-    test_loss, test_acc = q_aware_model.evaluate(X_test, y_test, verbose=0)
+    model.load_weights("./models/mobo-best-dscnn-model.weights.h5")
+    test_loss, test_acc = model.evaluate(X_test, y_test, verbose=0)
 
     # measure inference latency
     sample_input = X_test[:1]
-    _ = q_aware_model.predict(sample_input, verbose=0)
+    _ = model.predict(sample_input, verbose=0)
 
     runs = 50
     start_infer = time.time()
     for _ in range(runs):
-        _ = q_aware_model.predict(sample_input, verbose=0)
+        _ = model.predict(sample_input, verbose=0)
     end_infer = time.time()
 
     avg_latency = (end_infer - start_infer) / runs
     print(f"Average inference latency: {avg_latency*1000:.3f} ms per sample")
 
     # measure model size
-    q_aware_model.save("temp_model.h5", include_optimizer=False)
+    model.save("temp_model.h5", include_optimizer=False)
     model_size = os.path.getsize("temp_model.h5") / 1024  # KB
     print(f"Model size: {model_size:.2f} KB")
 
-    q_aware_model.save("./models/qat-mobo-best-dscnn-model.keras")
+    model.save("./models/mobo-best-dscnn-model.keras")
 
-    converter = tf.lite.TFLiteConverter.from_keras_model(q_aware_model)
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
 
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
 
@@ -150,12 +146,12 @@ def objective(**params):
 
     tflite_model = converter.convert()
 
-    with open("./models/qat-mobo-best-dscnn-model.tflite", "wb") as f:
+    with open("./models/mobo-best-dscnn-model.tflite", "wb") as f:
         f.write(tflite_model)
 
     print(f"Pre PTQ Test accuracy: {test_acc * 100:.2f}%")
     int8_ptq_evals = evaluate_int8_ptq_model(
-        X_test, y_test, "./models/qat-mobo-best-dscnn-model.tflite", 
+        X_test, y_test, "./models/mobo-best-dscnn-model.tflite", 
         reps_per_sample=5,            
         warmup_runs=3,                
         num_samples=200,              
@@ -183,7 +179,7 @@ def objective(**params):
 
     summary_results.append([J, test_loss, acc_fp32, acc_int8, int8_drop, avg_latency, lat_ms, model_size, size_kb, train_time, params])
 
-    with open("mobo-summary_results.txt", "a") as f:
+    with open("spt_summary_results.txt", "a") as f:
         f.write(str([J, test_loss, acc_fp32, acc_int8, int8_drop, avg_latency, lat_ms, model_size, size_kb, train_time, params]) + "\n")
 
     return J  
@@ -223,8 +219,8 @@ for params, func_val in zip(result.x_iters, result.func_vals):
 df = pd.DataFrame(records)
 print(df)
 
-df.to_csv("./results/qat_mobo_results.csv", index=False)
-df.to_json("./results/qat_mobo_results.json", orient="records", indent=2)
+df.to_csv("mobo_results.csv", index=False)
+df.to_json("mobo_results.json", orient="records", indent=2)
 
 
 
